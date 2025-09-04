@@ -1,0 +1,28 @@
+name: raingpm_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - gdal=3.6.2
+  - rasterio=1.3.6
+  - geopandas=0.13.2
+  - pandas=2.0.3
+  - matplotlib
+  - pip
+  - pip:
+    - loguru==0.7.2
+    - dynaconf
+    - bs4
+    - dask
+    - h5py
+    - scikit-image
+    - rioxarray
+    - commentjson==0.9.0
+    - configobj==5.0.8
+    - hvac==2.2.0
+    - ipython==8.12.3
+    - ipywidgets==8.1.0
+    - boto3==1.34.27
+    - rasterstats==0.19.0
+    - shapely==2.0.1

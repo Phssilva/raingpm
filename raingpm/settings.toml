@@ -1,0 +1,21 @@
+[GPM]
+url = "https://jsimpsonhttps.pps.eosdis.nasa.gov/imerg/"
+user = "pedro.hsantos1993@gmail.com"
+
+[DEFAULT]
+nmax_process = 8
+
+[STORAGE]
+station_name = "urubici_02849021"
+path_base = "/home/phsilva/UFSC/raingpm/raingpm/storage"
+path_raw = "@format {this.STORAGE.path_base}/RAW"
+path_intermediary = "@format {this.STORAGE.path_base}/INTERMEDIARY"
+path_processed = "@format {this.STORAGE.path_base}/PROCESSED"
+gpm_raw = "@format {this.STORAGE.path_raw}/GPM/EARLY"
+gpm_intermediary = "@format {this.STORAGE.path_intermediary}/GPM"
+gpm_prepared = "@format {this.STORAGE.path_intermediary}/GPM/rain_hourly/EARLY"
+gpm_processed = "@format {this.STORAGE.path_processed}/GPM/{this.STORAGE.station_name}"
+template = "@format {this.STORAGE.path_base}/TEMPLATES"
+raster_gpm_template = "@format {this.STORAGE.template}/urubici_template.tif"
+extent_gpm_template = "@format {this.STORAGE.template}/urubici_02849021.shp"
+
