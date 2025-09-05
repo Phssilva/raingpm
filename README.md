@@ -38,7 +38,7 @@ For a complete list of dependencies, see `requirements.txt`.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/raingpm.git
+git clone https://github.com/Phssilva/raingpm.git
 cd raingpm
 ```
 
