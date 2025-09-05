@@ -239,4 +239,3 @@ Pedro Silva
 ## Acknowledgments
 
 - NASA Global Precipitation Measurement Mission
-- [Add any other acknowledgments here]
