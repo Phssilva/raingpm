@@ -223,6 +223,8 @@ raingpm/
 
 ## Data Sources
 
+Register at https://gpm.nasa.gov/data/directory to get your NASA Earth Data credentials.
+
 This package works with NASA's GPM IMERG data, which can be accessed at:
 https://jsimpsonhttps.pps.eosdis.nasa.gov/imerg/
 
