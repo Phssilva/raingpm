@@ -16,6 +16,6 @@ gpm_intermediary = "@format {this.STORAGE.path_intermediary}/GPM"
 gpm_prepared = "@format {this.STORAGE.path_intermediary}/GPM/rain_hourly/EARLY"
 gpm_processed = "@format {this.STORAGE.path_processed}/GPM/{this.STORAGE.station_name}"
 template = "@format {this.STORAGE.path_base}/TEMPLATES"
-raster_gpm_template = "@format {this.STORAGE.template}/urubici_template.tif"
-extent_gpm_template = "@format {this.STORAGE.template}/urubici_02849021.shp"
+raster_gpm_template = "@format {this.STORAGE.template}/roi_poa_template.tif"
+extent_gpm_template = "@format {this.STORAGE.template}/roi_poa.shp"
 

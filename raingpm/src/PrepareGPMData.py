@@ -67,9 +67,12 @@ class PrepareGPM():
         
         logger.info(f'Cropping {df_files.shape[0]} files...')
         
-        extent = self.get_polygon_from_template()
-        template_raster = rasterio.open(raster_template)
         
+
+        shapefile_path = settings.STORAGE.extent_gpm_template
+        template_raster = raster.create_raster_from_shapefile(shapefile_path, raster_template)
+        template_raster = rasterio.open(raster_template)
+        extent = self.get_polygon_from_template()
         for it, row in df_files.iterrows():
              logger.info(f'Cropping {row["path"]}...')
              filename_dst = files.gen_hourly_name(row['out_dir'], row['path'])

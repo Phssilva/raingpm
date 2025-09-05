@@ -40,7 +40,7 @@ def data_processing(date: tuple):
 
 
 if __name__ == "__main__":
-    dt_end = datetime(2025,5,15)
+    dt_end = datetime(2024,1,18)
     dt_end = dt_end - timedelta(hours=3)
     dt_init = dt_end - timedelta(days=7)
     # data_ingestion(date=(dt_end, dt_init))

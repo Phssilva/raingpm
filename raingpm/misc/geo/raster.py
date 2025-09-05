@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 from datetime import datetime
-
+import math
 import rasterio.features
 from rasterio.transform import from_origin
 import dask.array as da
@@ -25,6 +25,7 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.enums import Resampling
 from rasterio.transform import from_bounds, Affine
 from rasterio.mask import mask
+from rasterio import features
 import rioxarray as rxr
 import xarray as xr
 from rasterio.merge import merge
@@ -191,9 +192,9 @@ def sum_rasters(df: DataFrame, category: str, out_dir: str):
         logger.info("Removing old file datalake with the same path...")
         os.remove(tmp_name)
 
-def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000):
+def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000, force_utm=False):
     """
-    Cria um raster com pixels de tamanho específico a partir de um shapefile.
+    Cria um raster com pixels de tamanho específico a partir de um shapefile, mantendo o CRS original por padrão.
     
     Parameters:
     -----------
@@ -203,12 +204,16 @@ def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000):
         Caminho para salvar o raster de saída
     pixel_size : float
         Tamanho do pixel em metros (padrão: 5000 para pixels de 5km)
+    force_utm : bool
+        Se True, força a conversão para UTM. Se False, mantém o CRS original (padrão: False)
     """
     # Carrega o shapefile
     gdf = gpd.read_file(shapefile_path)
     
-    # Garante que o shapefile está em um sistema de coordenadas projetado (metros)
-    if gdf.crs and gdf.crs.is_geographic:
+    original_crs = gdf.crs
+    
+    # Converte para UTM apenas se force_utm for True e o CRS for geográfico
+    if force_utm and gdf.crs and gdf.crs.is_geographic:
         print("Convertendo de coordenadas geográficas para projetadas (UTM)...")
         # Determina a zona UTM apropriada baseada no centroide do shapefile
         centroid = gdf.unary_union.centroid
@@ -216,19 +221,44 @@ def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000):
         hemisphere = 'south' if centroid.y < 0 else 'north'
         utm_crs = f"+proj=utm +zone={utm_zone} +{hemisphere} +datum=WGS84 +units=m +no_defs"
         gdf = gdf.to_crs(utm_crs)
+        print(f"Convertido para {utm_crs}")
+    else:
+        print(f"Mantendo o CRS original: {original_crs}")
     
     # Obtém os limites do shapefile
     minx, miny, maxx, maxy = gdf.total_bounds
     
     # Calcula o número de pixels necessários
-    width = int((maxx - minx) / pixel_size) + 1
-    height = int((maxy - miny) / pixel_size) + 1
+    if gdf.crs and gdf.crs.is_geographic:
+        # Para CRS geográfico (como EPSG:4326), convertemos o tamanho do pixel de metros para graus
+        # Aproximadamente 111,320 metros = 1 grau no equador (para latitude)
+        # Para longitude, o fator varia com a latitude: cos(latitude) * 111,320 metros = 1 grau
+        # Usamos a latitude média para o cálculo
+        mean_lat = (miny + maxy) / 2
+        meters_per_degree_lat = 111320  # metros por grau de latitude no equador
+        meters_per_degree_lon = 111320 * math.cos(math.radians(mean_lat))  # metros por grau de longitude na latitude média
+        
+        # Convertemos o tamanho do pixel de metros para graus
+        pixel_size_lat = pixel_size / meters_per_degree_lat  # tamanho do pixel em graus de latitude
+        pixel_size_lon = pixel_size / meters_per_degree_lon  # tamanho do pixel em graus de longitude
+        
+        # Calculamos as dimensões
+        width = max(int((maxx - minx) / pixel_size_lon), 10)  # pelo menos 10 pixels de largura
+        height = max(int((maxy - miny) / pixel_size_lat), 10)  # pelo menos 10 pixels de altura
+        
+        print(f"CRS geográfico detectado. Usando resolução aproximada de {pixel_size_lat:.6f}° x {pixel_size_lon:.6f}° por pixel.")
+    else:
+        # Para CRS projetado (como UTM), usamos o tamanho do pixel diretamente em metros
+        width = int((maxx - minx) / pixel_size) + 1
+        height = int((maxy - miny) / pixel_size) + 1
+    
+    print(f"Dimensões calculadas: {width} x {height} pixels")
     
     # Cria a transformação para o raster
     transform = from_bounds(minx, miny, maxx, maxy, width, height)
     
     # Cria um array vazio para o raster
-    raster_data = np.zeros((height, width), dtype=np.uint8)
+    raster_data = np.zeros((height, width), dtype=np.float32)
     
     # Rasteriza o shapefile
     shapes = [(geom, 1) for geom in gdf.geometry]
@@ -237,7 +267,8 @@ def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000):
         out=raster_data,
         transform=transform,
         fill=0,
-        all_touched=True
+        all_touched=True,
+        dtype=np.float32
     )
     
     # Cria o perfil do raster
@@ -246,10 +277,10 @@ def create_raster_from_shapefile(shapefile_path, output_path, pixel_size=5000):
         'height': height,
         'width': width,
         'count': 1,
-        'dtype': rasterio.uint8,
+        'dtype': rasterio.float32,
         'crs': gdf.crs,
         'transform': transform,
-        'nodata': 0
+        'nodata': -9999
     }
     
     # Salva o raster
