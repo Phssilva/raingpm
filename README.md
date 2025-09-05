@@ -232,7 +232,7 @@ You'll need NASA Earth Data credentials to download the data.
 
 ## License
 
-[Add your license information here]
+MIT License
 
 ## Author
 
